@@ -31,6 +31,40 @@ RSpec.shared_examples :subscriptions do |subscriptions_class|
     expect(subscriptions.all_for("Test3DomainEvent")).to eq([handler, global_handler])
   end
 
+  it "returns all events and their subscribed handlers" do
+    handler = TestHandler.new
+    another_handler = TestHandler.new
+    global_handler = TestHandler.new
+
+    subscriptions.add_subscription(handler, ['Test1DomainEvent', 'Test3DomainEvent'])
+    subscriptions.add_subscription(another_handler, ['Test2DomainEvent'])
+    subscriptions.add_global_subscription(global_handler)
+
+    expect(subscriptions.all)
+      .to eq(
+            {
+              global: {all: [global_handler]},
+              local: {
+                "Test1DomainEvent" => [
+                  handler
+                ],
+                "Test3DomainEvent" => [
+                  handler
+                ],
+                "Test2DomainEvent" => [
+                  another_handler
+                ]
+              },
+              thread: {
+                global: {
+                  all: []
+                },
+                local: {}
+              }
+            }
+          )
+  end
+
   it "returns subscribed thread handlers" do
     handler = TestHandler.new
     another_handler = TestHandler.new
