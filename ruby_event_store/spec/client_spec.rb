@@ -877,6 +877,34 @@ module RubyEventStore
       end
     end
 
+    describe "#subscription_list" do
+      specify do
+        global_handler = Subscribers::ValidHandler.new
+        handler = Subscribers::ValidHandler.new
+        client.subscribe(handler, to: [ProductAdded])
+        block = Proc.new { "Event published!" }
+        client.subscribe(to: [OrderCreated], &block)
+        client.subscribe_to_all_events(global_handler)
+
+        expect(client.subscription_list)
+          .to eq(
+                {
+                  global: {all: [global_handler]},
+                  local: {
+                    "ProductAdded" => [handler],
+                    "OrderCreated" => [block]
+                  },
+                  thread: {
+                    global: {
+                      all: []
+                    },
+                    local: {}
+                  }
+                }
+              )
+      end
+    end
+
     specify "#inspect" do
       object_id = client.object_id.to_s(16)
       expect(client.inspect).to eq("#<RubyEventStore::Client:0x#{object_id}>")
