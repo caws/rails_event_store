@@ -30,6 +30,14 @@ module RubyEventStore
       [local, global, thread].map { |r| r.all_for(event_type) }.reduce(&:+)
     end
 
+    def all
+      {
+        local: local.all,
+        global: global.all,
+        thread: thread.all
+      }
+    end
+
     private
 
     attr_reader :local, :global, :thread
@@ -43,6 +51,13 @@ module RubyEventStore
 
       def all_for(event_type)
         [global, local].map { |r| r.all_for(event_type) }.reduce(&:+)
+      end
+
+      def all
+        {
+          local: @local.all,
+          global: @global.all
+        }
       end
     end
 
@@ -59,6 +74,10 @@ module RubyEventStore
       def all_for(event_type)
         @subscriptions[event_type]
       end
+
+      def all
+        @subscriptions || {}
+      end
     end
 
     class GlobalSubscriptions
@@ -73,6 +92,12 @@ module RubyEventStore
 
       def all_for(_event_type)
         @subscriptions
+      end
+
+      def all
+        {
+          all: @subscriptions
+        }
       end
     end
 
@@ -89,12 +114,17 @@ module RubyEventStore
       def all_for(event_type)
         @subscriptions.value[event_type]
       end
+
+      def all
+        @subscriptions.value
+      end
     end
 
     class ThreadGlobalSubscriptions
       def initialize
         @subscriptions = Concurrent::ThreadLocalVar.new([])
       end
+      attr_reader :subscriptions
 
       def add(subscription)
         @subscriptions.value += [subscription]
@@ -103,6 +133,12 @@ module RubyEventStore
 
       def all_for(_event_type)
         @subscriptions.value
+      end
+
+      def all
+        {
+          all: @subscriptions.value
+        }
       end
     end
   end
