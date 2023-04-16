@@ -170,6 +170,13 @@ module RubyEventStore
       subscriptions.all_for(event_type_resolver.call(event_class))
     end
 
+    # Get a list of all events and their handlers
+    #
+    # @return [Hash]
+    def subscription_list
+      subscriptions.all
+    end
+
     # Builder object for collecting temporary handlers (subscribers)
     # which are active only during the invocation of the provided
     # block of code.
